@@ -29,6 +29,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Window;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
@@ -51,7 +52,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+
+
+        //requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         //mRegistrationProgressBar = (ProgressBar) findViewById(R.id.registrationProgressBar);
         mRegistrationBroadcastReceiver = new BroadcastReceiver() {
@@ -63,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
                 boolean sentToken = sharedPreferences
                         .getBoolean(QuickstartPreferences.SENT_TOKEN_TO_SERVER, false);
                 if (sentToken) {
-                    getWindow().requestFeature(Window.FEATURE_NO_TITLE);
                     //mInformationTextView.setText(getString(R.string.gcm_send_message));
                     Toast.makeText(getApplicationContext(), getString(R.string.gcm_send_message), 500).show();
                     /*Intent i = new Intent(Intent.ACTION_VIEW);
@@ -87,12 +89,13 @@ public class MainActivity extends AppCompatActivity {
             startService(intent);
         }
 
-        super.onCreate(savedInstanceState);
         webView = new WebView(this);
-        this.setContentView(webView);
+
         webView.setInitialScale(1);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setLoadWithOverviewMode(true);
+
+        webView.getSettings().setTextSize(WebSettings.TextSize.NORMAL);
         webView.getSettings().setUseWideViewPort(true);
         webView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
         webView.setScrollbarFadingEnabled(false);
@@ -105,6 +108,8 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+
+        this.setContentView(webView);
     }
 
     @Override
