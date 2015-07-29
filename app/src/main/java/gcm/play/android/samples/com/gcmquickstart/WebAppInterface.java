@@ -20,12 +20,12 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
-    public boolean isIonSetup() {
+    public String isIonSetup() {
         SharedPreferences sharedPreferences =
                 PreferenceManager.getDefaultSharedPreferences(mContext);
         boolean sentToken = sharedPreferences
                 .getBoolean(QuickstartPreferences.ION_SETUP, false);
-        return sentToken;
+        return sentToken ? "true" : "false";
     }
 
     @JavascriptInterface

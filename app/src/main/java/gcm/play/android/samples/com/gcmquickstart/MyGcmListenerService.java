@@ -16,13 +16,17 @@
 
 package gcm.play.android.samples.com.gcmquickstart;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.os.Vibrator;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -62,49 +66,79 @@ public class MyGcmListenerService extends GcmListenerService {
     /**
      * Create and show a simple notification containing the received GCM message.
      *
-     * @param message GCM message received.
+     * @param data GCM data received.
+     * title
+     * text
+     * url
+     * sound
+     * ongoing
+     * wakeup
      */
     private void sendNotification(Bundle data) {
+        Vibrator vib = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
 
-        String title = data.getString("title");
-        String message = data.getString("message");
-        String sound = data.getString("sound");
-        String url = data.getString("url");
+        int vibrate; try{ vibrate = Integer.parseInt(data.getString("vibrate")); } catch(Exception e) { vibrate = 0; }
+        if(vibrate > 0) {
 
-        Log.d(TAG, "Title: " + title);
-        Log.d(TAG, "Message: " + message);
-        Log.d(TAG, "Sound: " + sound);
-        Log.d(TAG, "URL: " + url);
-        if(message == null) {
-            return; // that would be dumb
+            vib.vibrate(vibrate);
         }
-        if(title == null) title = "Alert";
-        if(sound == null) sound = "false";
-        Intent intent = null;
-        if(url == null) {
+        String[] vibratepattern; try{ vibratepattern = data.getString("vibrate").split(","); } catch(Exception e) { vibratepattern = new String[]{}; }
+        long[] vibpattern = new long[10];int i=0;
+        for(String p:vibratepattern) {
+            vibpattern[i++] = Long.parseLong(p);
+        }
+        if(vibratepattern.length > 0) {
+            vib.vibrate(vibpattern, -1);
+        }
+        String notif_title = null; try { notif_title = data.getString("title"); } catch(Exception e) { notif_title = ""; }
+        String notif_text = null; try { notif_text = data.getString("text"); } catch(Exception e) { notif_text = ""; }
+        String notif_url = null; try { notif_url = data.getString("url"); } catch(Exception e) { notif_url = ""; }
+        String notif_strsound = null; try { notif_strsound = data.getString("sound"); } catch(Exception e) { notif_strsound = ""; }
+        String notif_strongoing = null; try { notif_strongoing = data.getString("ongoing"); } catch(Exception e) { notif_strongoing = ""; }
+        String notif_strwakeup = null; try { notif_strwakeup = data.getString("wakeup"); } catch(Exception e) { notif_strwakeup = ""; }
+        boolean notif_sound = (notif_strsound != null && notif_strsound.equals("true"));
+        boolean notif_ongoing = (notif_strongoing != null && notif_strongoing.equals("true"));
+        boolean notif_wakeup = (notif_strwakeup != null && notif_strwakeup.equals("true"));
+
+        String ns = Context.NOTIFICATION_SERVICE;
+        Intent intent;
+        if(notif_url != null && notif_url.length() > 0) {
             intent = new Intent(this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         } else {
             intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(url));
+            intent.setData(Uri.parse(notif_url));
+        }
+        PendingIntent pIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        PowerManager.WakeLock wl = null;
+        if(notif_wakeup) {
+            Log.d("showNotification", "Wakeup enabled");
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "My Tag");
+            wl.acquire(500);
+        }
+        // NotificationCompat supports API level 9
+        NotificationCompat.Builder n  = new NotificationCompat.Builder(this)
+                .setContentTitle(notif_title)
+                .setContentText(notif_text)
+                .setSmallIcon(R.drawable.ic_stat_ic_notification)
+                .setLargeIcon(BitmapFactory.decodeResource(this.getResources(), R.drawable.ic_stat_ic_notification))
+                .setContentIntent(pIntent)
+                .setAutoCancel(true)
+                .setOngoing(notif_ongoing)
+                .setTicker(notif_title+": "+notif_text);
+        if(notif_sound) {
+            n.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
         }
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
-                PendingIntent.FLAG_ONE_SHOT);
-
-        Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        NotificationCompat.Builder nb = new NotificationCompat.Builder(this);
-        nb.setSmallIcon(R.drawable.ic_stat_ic_notification);
-        nb.setContentTitle(title);
-        nb.setContentText(message);
-        nb.setAutoCancel(true);
-        if(sound != "false") nb.setSound(defaultSoundUri);
-
-        nb.setContentIntent(pendingIntent);
-
         NotificationManager notificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        Notification notif = n.build();
+        notificationManager.notify(0, notif);
 
-        notificationManager.notify(0 /* ID of notification */, nb.build());
+        if(notif_wakeup) {
+            wl.release();
+        }
+
     }
 }
