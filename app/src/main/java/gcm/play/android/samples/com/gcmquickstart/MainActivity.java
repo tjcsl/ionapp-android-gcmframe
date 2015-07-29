@@ -33,6 +33,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Window;
+import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -76,6 +77,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
 
+        this.setContentView(R.layout.activity_main);
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(getResources().getColor(R.color.navbar_color));
+
+        }
         //requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         //mRegistrationProgressBar = (ProgressBar) findViewById(R.id.registrationProgressBar);
@@ -89,7 +98,8 @@ public class MainActivity extends AppCompatActivity {
                         .getBoolean(QuickstartPreferences.SENT_TOKEN_TO_SERVER, false);
                 if (sentToken) {
                     //mInformationTextView.setText(getString(R.string.gcm_send_message));
-                    Toast.makeText(getApplicationContext(), getString(R.string.gcm_send_message), 500).show();
+                    //Toast.makeText(getApplicationContext(), getString(R.string.gcm_send_message), 500).show();
+                    Log.i(TAG, "Google token sent");
                     /*Intent i = new Intent(Intent.ACTION_VIEW);
                     i.setData(Uri.parse("https://ion.tjhsst.edu/"));
                     startActivity(i);*/
@@ -116,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
         boolean sentToken = sharedPreferences
                 .getBoolean(QuickstartPreferences.ION_SETUP, false);
 
-        webView = new WebView(this);
+        webView = (WebView) findViewById(R.id.webview);
 
         webView.setInitialScale(1);
         webView.getSettings().setJavaScriptEnabled(true);
@@ -147,15 +157,14 @@ public class MainActivity extends AppCompatActivity {
 
         webView.loadUrl(MainActivity.ION_HOST);
 
-        webView.setWebViewClient(new WebViewClient() {
+        /*webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 view.loadUrl(url);
                 return true;
             }
-        });
+        });*/
 
-        this.setContentView(webView);
     }
 
     @Override
