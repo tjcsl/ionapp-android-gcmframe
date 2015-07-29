@@ -21,6 +21,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -89,6 +92,11 @@ public class MainActivity extends AppCompatActivity {
             startService(intent);
         }
 
+        SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean sentToken = sharedPreferences
+                .getBoolean(QuickstartPreferences.SENT_TOKEN_TO_SERVER, false);
+
         webView = new WebView(this);
 
         webView.setInitialScale(1);
@@ -99,7 +107,23 @@ public class MainActivity extends AppCompatActivity {
         webView.getSettings().setUseWideViewPort(true);
         webView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
         webView.setScrollbarFadingEnabled(false);
-        webView.loadUrl("https://ion.tjhsst.edu/");
+        String uaString = webView.getSettings().getUserAgentString();
+        uaString += " - IonAndroid (";
+        if(sentToken) {
+            uaString += "appRegistered:True";
+        } else {
+            uaString += "appRegistered:False";
+        }
+        uaString += " osVersion:" + System.getProperty("os.version");
+        uaString += " apiLevel:" + android.os.Build.VERSION.SDK;
+        uaString += " Device:" + android.os.Build.DEVICE;
+        uaString += " Model:" + android.os.Build.MODEL;
+        uaString += " Product:" + android.os.Build.PRODUCT;
+        uaString += ")";
+        webView.getSettings().setUserAgentString(uaString);
+        webView.addJavascriptInterface(new WebAppInterface(this), "IonAndroidInterface");
+
+        webView.loadUrl("http://127.0.0.1:8080/");
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
