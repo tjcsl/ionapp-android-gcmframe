@@ -42,11 +42,7 @@ public class MyGcmListenerService extends GcmListenerService {
     // [START receive_message]
     @Override
     public void onMessageReceived(String from, Bundle data) {
-        String title = data.getString("title");
-        String message = data.getString("message");
         Log.d(TAG, "From: " + from);
-        Log.d(TAG, "Title: " + title);
-        Log.d(TAG, "Message: " + message);
 
         /**
          * Production applications would usually process the message here.
@@ -59,7 +55,7 @@ public class MyGcmListenerService extends GcmListenerService {
          * In some cases it may be useful to show a notification indicating to the user
          * that a message was received.
          */
-        sendNotification(title, message);
+        sendNotification(data);
     }
     // [END receive_message]
 
@@ -68,30 +64,47 @@ public class MyGcmListenerService extends GcmListenerService {
      *
      * @param message GCM message received.
      */
-    private void sendNotification(String title, String message) {
-        if(title == null) {
-            title = "Alert";
-        }
+    private void sendNotification(Bundle data) {
+
+        String title = data.getString("title");
+        String message = data.getString("message");
+        String sound = data.getString("sound");
+        String url = data.getString("url");
+
+        Log.d(TAG, "Title: " + title);
+        Log.d(TAG, "Message: " + message);
+        Log.d(TAG, "Sound: " + sound);
+        Log.d(TAG, "URL: " + url);
         if(message == null) {
             return; // that would be dumb
         }
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        if(title == null) title = "Alert";
+        if(sound == null) sound = "false";
+        Intent intent = null;
+        if(url == null) {
+            intent = new Intent(this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        } else {
+            intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(url));
+        }
+
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
                 PendingIntent.FLAG_ONE_SHOT);
 
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_stat_ic_notification)
-                .setContentTitle(title)
-                .setContentText(message)
-                .setAutoCancel(true)
-                .setSound(defaultSoundUri)
-                .setContentIntent(pendingIntent);
+        NotificationCompat.Builder nb = new NotificationCompat.Builder(this);
+        nb.setSmallIcon(R.drawable.ic_stat_ic_notification);
+        nb.setContentTitle(title);
+        nb.setContentText(message);
+        nb.setAutoCancel(true);
+        if(sound != "false") nb.setSound(defaultSoundUri);
+
+        nb.setContentIntent(pendingIntent);
 
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
+        notificationManager.notify(0 /* ID of notification */, nb.build());
     }
 }

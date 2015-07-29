@@ -42,7 +42,25 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
+
+    static final String ION_HOST = "http://127.0.0.1:8080/";
+    static final String ION_SETUP_URL = "http://127.0.0.1:8080/notifications/android/setup";
 
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     private static final String TAG = "MainActivity";
@@ -95,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences =
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean sentToken = sharedPreferences
-                .getBoolean(QuickstartPreferences.SENT_TOKEN_TO_SERVER, false);
+                .getBoolean(QuickstartPreferences.ION_SETUP, false);
 
         webView = new WebView(this);
 
@@ -123,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
         webView.getSettings().setUserAgentString(uaString);
         webView.addJavascriptInterface(new WebAppInterface(this), "IonAndroidInterface");
 
-        webView.loadUrl("http://127.0.0.1:8080/");
+        webView.loadUrl(MainActivity.ION_HOST);
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -176,6 +194,48 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
         return true;
+    }
+
+    public static void notifSetup(String user_token, String gcm_token, Context mContext) {
+
+        Log.i(TAG, user_token+"\n"+gcm_token);
+        Log.i(TAG, "Setting up notification support..");
+        HttpClient httpclient = new DefaultHttpClient();
+        HttpPost httppost = new HttpPost(ION_SETUP_URL);
+
+        try {
+            // Add your data
+            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+            nameValuePairs.add(new BasicNameValuePair("user_token", user_token));
+            nameValuePairs.add(new BasicNameValuePair("gcm_token", gcm_token));
+            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
+            // Execute HTTP Post Request
+            HttpResponse response = httpclient.execute(httppost);
+            HttpEntity entity = response.getEntity();
+            String resp = "";
+            if(entity != null){
+                resp = EntityUtils.toString(entity);
+            }
+
+            if(resp.indexOf("Now registered") != -1) {
+
+                Toast.makeText(mContext, "Your device can now receive notifications from Intranet. To change this, hit the right-side user icon and tap Preferences.", Toast.LENGTH_LONG).show();
+                SharedPreferences sharedPreferences =
+                        PreferenceManager.getDefaultSharedPreferences(mContext);
+                sharedPreferences.edit().putBoolean(QuickstartPreferences.ION_SETUP, true).apply();
+            } else {
+                Toast.makeText(mContext, "An error occurred trying to set up notifications: " + resp, Toast.LENGTH_LONG).show();
+            }
+
+
+
+
+        } catch (ClientProtocolException e) {
+            // TODO Auto-generated catch block
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+        }
     }
 
 }
