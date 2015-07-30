@@ -1,15 +1,16 @@
-package gcm.play.android.samples.com.gcmquickstart;
+package edu.tjhsst.ion.gcmFrame;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.webkit.JavascriptInterface;
-import android.widget.Toast;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 
 import java.io.IOException;
+
+import edu.tjhsst.ion.gcmFrame.com.gcmquickstart.R;
 
 public class WebAppInterface {
     Context mContext;

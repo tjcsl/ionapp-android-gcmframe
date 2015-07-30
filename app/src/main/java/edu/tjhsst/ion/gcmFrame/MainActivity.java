@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package gcm.play.android.samples.com.gcmquickstart;
+package edu.tjhsst.ion.gcmFrame;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -58,6 +55,8 @@ import org.apache.http.util.EntityUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import edu.tjhsst.ion.gcmFrame.com.gcmquickstart.R;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -140,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
             webView.setWebContentsDebuggingEnabled(true);
         }
         String uaString = webView.getSettings().getUserAgentString();
-        uaString += " - IonAndroid (";
+        uaString += " - IonAndroid: gcmFrame (";
         if(sentToken) {
             uaString += "appRegistered:True";
         } else {

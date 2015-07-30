@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package gcm.play.android.samples.com.gcmsender;
+package edu.tjhsst.ion.gcmFrame.com.gcmsender;
 
 import org.apache.commons.io.IOUtils;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
