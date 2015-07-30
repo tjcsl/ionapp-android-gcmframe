@@ -21,6 +21,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -71,6 +73,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView mInformationTextView;
     private WebView webView;
 
+    private boolean isConnected = true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -120,6 +124,18 @@ public class MainActivity extends AppCompatActivity {
             startService(intent);
         }
 
+        ConnectivityManager connectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager != null) {
+            NetworkInfo ni = connectivityManager.getActiveNetworkInfo();
+            if(ni != null) {
+                NetworkInfo.State state = ni.getState();
+                if (state == null || state != NetworkInfo.State.CONNECTED) {
+                    // record the fact that there is not connection
+                    isConnected = false;
+                }
+            }
+        }
+
         SharedPreferences sharedPreferences =
                 PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean sentToken = sharedPreferences
@@ -152,15 +168,24 @@ public class MainActivity extends AppCompatActivity {
         uaString += " Product:" + android.os.Build.PRODUCT;
         uaString += ")";
         webView.getSettings().setUserAgentString(uaString);
+
+        webView.setNetworkAvailable(isConnected);
+
+
         webView.addJavascriptInterface(new WebAppInterface(this), "IonAndroidInterface");
 
         webView.loadUrl(MainActivity.ION_HOST);
 
+        final String offlineHTML = "<script>url=\"[url]\"</script><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"/><body><h2>Network Disconnected</h2><h3>Unable to contact the Intranet application at this time. Try again later.</h3><button onclick='location.href.replace(url)' style='width:100%;height:50px'>Try Again</button></body>";
+        final String timeoutHTML = "<script>url=\"[url]\"</script><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"/><body><h2>Error Loading Page</h2><h3>Unable to contact the Intranet application at this time. Try again later.</h3><h3>Unable to load:<br /><a href=\"[url]\">[url]</a><br /><br />[desc]</h3><button onclick='location.href.replace(url)' style='width:100%;height:50px'>Try Again</button></body>";
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 Log.d(TAG, "Loading "+url);
-                if(url.contains(ION_HOST)) {
+                if(!isConnected) {
+                    view.loadData(offlineHTML, "text/html", "utf-8");
+                    return true;
+                } else if(url.contains(ION_HOST)) {
                     // keep in webview
                     webView.loadUrl(url);
                     return true;
@@ -170,6 +195,20 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(intent);
                     return true;
                 }
+            }
+
+            @Override
+            public void onReceivedError (WebView view, int errorCode,
+                                         String description, String failingUrl) {
+                //if (errorCode == ERROR_TIMEOUT) {
+                    view.stopLoading();  // may not be needed
+                    String html = timeoutHTML;
+                    html = html.replace("[url]", failingUrl);
+                    html = html.replace("[url]", failingUrl);
+                    html = html.replace("[url]", failingUrl);
+                    html = html.replace("[desc]", description);
+                    view.loadData(html, "text/html", "utf-8");
+                //}
             }
         });
 
