@@ -157,13 +157,22 @@ public class MainActivity extends AppCompatActivity {
 
         webView.loadUrl(MainActivity.ION_HOST);
 
-        /*webView.setWebViewClient(new WebViewClient() {
+        webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                view.loadUrl(url);
-                return true;
+                Log.d(TAG, "Loading "+url);
+                if(url.contains(ION_HOST)) {
+                    // keep in webview
+                    webView.loadUrl(url);
+                    return true;
+                } else {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(url));
+                    startActivity(intent);
+                    return true;
+                }
             }
-        });*/
+        });
 
     }
 
