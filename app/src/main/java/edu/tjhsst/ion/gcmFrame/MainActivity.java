@@ -62,8 +62,8 @@ import edu.tjhsst.ion.gcmFrame.com.gcmquickstart.R;
 
 public class MainActivity extends AppCompatActivity {
 
-    static final String ION_HOST = "http://127.0.0.1:8080/";
-    static final String ION_SETUP_URL = "http://127.0.0.1:8080/notifications/android/setup";
+    static final String ION_HOST = "https://ion.tjhsst.edu/";
+    static final String ION_SETUP_URL = "https://ion.tjhsst.edu/notifications/android/setup";
 
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     private static final String TAG = "MainActivity";
