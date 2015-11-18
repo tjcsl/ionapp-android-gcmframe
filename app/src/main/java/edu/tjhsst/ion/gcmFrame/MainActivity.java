@@ -42,6 +42,7 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -79,7 +80,8 @@ public class MainActivity extends AppCompatActivity {
             String resp = in.readLine();
             if (resp.contains("Now registered")) {
 
-                Toast.makeText(mContext, "Your device can now receive notifications from Intranet. To change this, hit the right-side user icon and tap Preferences.", Toast.LENGTH_LONG).show();
+                Toast.makeText(mContext, "Your device can now receive notifications from Intranet." +
+                        "To change this, hit the right-side user icon and tap Preferences.", Toast.LENGTH_LONG).show();
                 SharedPreferences sharedPreferences =
                         PreferenceManager.getDefaultSharedPreferences(mContext);
                 sharedPreferences.edit().putBoolean(QuickstartPreferences.ION_SETUP, true).apply();
@@ -105,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
             window.setStatusBarColor(getResources().getColor(R.color.navbar_color));
 
         }
-        //requestWindowFeature(Window.FEATURE_NO_TITLE);
+        // requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         mRegistrationBroadcastReceiver = new BroadcastReceiver() {
             @Override
@@ -138,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
             if (ni != null) {
                 NetworkInfo.State state = ni.getState();
                 if (state == null || state != NetworkInfo.State.CONNECTED) {
-                    // record the fact that there is not connection
+                    // record the fact that there is no connection
                     isConnected = false;
                 }
             }
@@ -161,20 +163,20 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             WebView.setWebContentsDebuggingEnabled(true);
         }
-        String uaString = webView.getSettings().getUserAgentString();
-        uaString += " - IonAndroid: gcmFrame (";
+        StringBuilder uaString = new StringBuilder(webView.getSettings().getUserAgentString());
+        uaString.append(" - IonAndroid: gcmFrame (");
         if (sentToken) {
-            uaString += "appRegistered:True";
+            uaString.append("appRegistered:True");
         } else {
-            uaString += "appRegistered:False";
+            uaString.append("appRegistered:False");
         }
-        uaString += " osVersion:" + System.getProperty("os.version");
-        uaString += " apiLevel:" + android.os.Build.VERSION.SDK_INT;
-        uaString += " Device:" + android.os.Build.DEVICE;
-        uaString += " Model:" + android.os.Build.MODEL;
-        uaString += " Product:" + android.os.Build.PRODUCT;
-        uaString += ")";
-        webView.getSettings().setUserAgentString(uaString);
+        uaString.append(" osVersion:").append(System.getProperty("os.version"));
+        uaString.append(" apiLevel:").append(android.os.Build.VERSION.SDK_INT);
+        uaString.append(" Device:").append(android.os.Build.DEVICE);
+        uaString.append(" Model:").append(android.os.Build.MODEL);
+        uaString.append(" Product:").append(android.os.Build.PRODUCT);
+        uaString.append(")");
+        webView.getSettings().setUserAgentString(uaString.toString());
 
         webView.setNetworkAvailable(isConnected);
 
@@ -183,17 +185,17 @@ public class MainActivity extends AppCompatActivity {
 
         webView.loadUrl(MainActivity.ION_HOST);
 
-        final String offlineHTML = "<script>url=\"[url]\"</script><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"/><body><h2>Network Disconnected</h2><h3>Unable to contact the Intranet application at this time. Try again later.</h3><button onclick='location.href.replace(url)' style='width:100%;height:50px'>Try Again</button></body>";
-        final String timeoutHTML = "<script>url=\"[url]\"</script><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"/><body><h2>Error Loading Page</h2><h3>Unable to contact the Intranet application at this time. Try again later.</h3><h3>Unable to load:<br /><a href=\"[url]\">[url]</a><br /><br />[desc]</h3><button onclick='location.href.replace(url)' style='width:100%;height:50px'>Try Again</button></body>";
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 Log.d(TAG, "Loading " + url);
                 if (!isConnected) {
-                    view.loadData(offlineHTML, "text/html", "utf-8");
+                    String html = getHtml("offline.html");
+                    html = html.replaceAll("\\[url\\]", url);
+                    view.loadData(html, "text/html", "utf-8");
                     return true;
                 } else if (url.contains(ION_HOST)) {
-                    // keep in webview
+                    // keep in WebView
                     webView.loadUrl(url);
                     return true;
                 } else {
@@ -207,18 +209,30 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceivedError(WebView view, int errorCode,
                                         String description, String failingUrl) {
-                //if (errorCode == ERROR_TIMEOUT) {
+                // if (errorCode == ERROR_TIMEOUT)
                 view.stopLoading();  // may not be needed
-                String html = timeoutHTML;
-                html = html.replace("[url]", failingUrl);
-                html = html.replace("[url]", failingUrl);
-                html = html.replace("[url]", failingUrl);
-                html = html.replace("[desc]", description);
+                String html = getHtml("timeout.html");
+                html = html.replaceAll("\\[url\\]", failingUrl);
+                html = html.replaceAll("\\[desc\\]", description);
                 view.loadData(html, "text/html", "utf-8");
-                //}
             }
         });
 
+    }
+
+
+    private String getHtml(String file) {
+        String html = "";
+        try {
+            InputStream in = getAssets().open(file);
+            byte[] data = new byte[in.available()];
+            in.read(data);
+            html = new String(data);
+
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to read HTML asset", e);
+        }
+        return html;
     }
 
     @Override

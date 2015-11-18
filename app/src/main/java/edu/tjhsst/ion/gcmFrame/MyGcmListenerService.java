@@ -45,7 +45,6 @@ public class MyGcmListenerService extends GcmListenerService {
      * @param data Data bundle containing message data as key/value pairs.
      *             For Set of keys use data.keySet().
      */
-    // [START receive_message]
     @Override
     public void onMessageReceived(String from, Bundle data) {
         Log.d(TAG, "From: " + from);
@@ -63,7 +62,6 @@ public class MyGcmListenerService extends GcmListenerService {
          */
         sendNotification(data);
     }
-    // [END receive_message]
 
     /**
      * Create and show a simple notification containing the received GCM message.
@@ -85,7 +83,7 @@ public class MyGcmListenerService extends GcmListenerService {
             vib.vibrate(vibrate);
         }
         String[] vibratepattern = data.getString("vibrate", "").split(",");
-        long[] vibpattern = new long[10];
+        long[] vibpattern = new long[vibratepattern.length];
         int i = 0;
         for (String p : vibratepattern) {
             vibpattern[i++] = Long.parseLong(p);
@@ -99,12 +97,12 @@ public class MyGcmListenerService extends GcmListenerService {
         String notif_strsound = data.getString("sound", "");
         String notif_strongoing = data.getString("ongoing", "");
         String notif_strwakeup = data.getString("wakeup", "");
-        boolean notif_sound = (notif_strsound != null && notif_strsound.equals("true"));
-        boolean notif_ongoing = (notif_strongoing != null && notif_strongoing.equals("true"));
-        boolean notif_wakeup = (notif_strwakeup != null && notif_strwakeup.equals("true"));
+        boolean notif_sound = notif_strsound.equals("true");
+        boolean notif_ongoing = notif_strongoing.equals("true");
+        boolean notif_wakeup = notif_strwakeup.equals("true");
 
         Intent intent;
-        if (notif_url != null && notif_url.length() > 0) {
+        if (notif_url.length() > 0) {
             intent = new Intent(this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         } else {
@@ -116,10 +114,11 @@ public class MyGcmListenerService extends GcmListenerService {
         if (notif_wakeup) {
             Log.d("showNotification", "Wakeup enabled");
             PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            // FIXME: FULL_WAKE_LOCK is deprecated
             wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "My Tag");
             wl.acquire(500);
         }
-        // NotificationCompat supports API level 9
+        // NotificationCompat supports API level 12
         NotificationCompat.Builder n = new NotificationCompat.Builder(this)
                 .setContentTitle(notif_title)
                 .setContentText(notif_text)

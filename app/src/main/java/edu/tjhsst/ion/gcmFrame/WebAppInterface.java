@@ -22,6 +22,7 @@ class WebAppInterface {
         mContext = c;
     }
 
+    @SuppressWarnings("unused")
     @JavascriptInterface
     public String isIonSetup() {
         SharedPreferences sharedPreferences =
@@ -31,6 +32,7 @@ class WebAppInterface {
         return sentToken ? "true" : "false";
     }
 
+    @SuppressWarnings("unused")
     @JavascriptInterface
     public void gcmSetup(String user_token) {
         InstanceID instanceID = InstanceID.getInstance(mContext);
