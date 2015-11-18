@@ -1,7 +1,5 @@
 <resources>
     <string name="app_name">TJ Intranet</string>
-    <string name="gcm_send_message">Registered with Google server.</string>
-    <string name="registering_message">Registering with server...</string>
     <string name="token_error_message">An error occurred while either fetching the InstanceID token,
         sending the fetched token to the server or subscribing to the PubSub topic. Please try
         running this application again.</string>

@@ -12,8 +12,8 @@ import java.io.IOException;
 
 import edu.tjhsst.ion.gcmFrame.com.gcmquickstart.R;
 
-public class WebAppInterface {
-    Context mContext;
+class WebAppInterface {
+    private final Context mContext;
 
     /** Instantiate the interface and set the context */
     WebAppInterface(Context c) {

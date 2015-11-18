@@ -79,12 +79,12 @@ public class MyGcmListenerService extends GcmListenerService {
     private void sendNotification(Bundle data) {
         Vibrator vib = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
 
-        int vibrate; try{ vibrate = Integer.parseInt(data.getString("vibrate")); } catch(Exception e) { vibrate = 0; }
+        int vibrate = Integer.parseInt(data.getString("vibrate", "0"));
         if(vibrate > 0) {
 
             vib.vibrate(vibrate);
         }
-        String[] vibratepattern; try{ vibratepattern = data.getString("vibrate").split(","); } catch(Exception e) { vibratepattern = new String[]{}; }
+        String[] vibratepattern = data.getString("vibrate", "").split(",");
         long[] vibpattern = new long[10];int i=0;
         for(String p:vibratepattern) {
             vibpattern[i++] = Long.parseLong(p);
@@ -92,17 +92,16 @@ public class MyGcmListenerService extends GcmListenerService {
         if(vibratepattern.length > 0) {
             vib.vibrate(vibpattern, -1);
         }
-        String notif_title = null; try { notif_title = data.getString("title"); } catch(Exception e) { notif_title = ""; }
-        String notif_text = null; try { notif_text = data.getString("text"); } catch(Exception e) { notif_text = ""; }
-        String notif_url = null; try { notif_url = data.getString("url"); } catch(Exception e) { notif_url = ""; }
-        String notif_strsound = null; try { notif_strsound = data.getString("sound"); } catch(Exception e) { notif_strsound = ""; }
-        String notif_strongoing = null; try { notif_strongoing = data.getString("ongoing"); } catch(Exception e) { notif_strongoing = ""; }
-        String notif_strwakeup = null; try { notif_strwakeup = data.getString("wakeup"); } catch(Exception e) { notif_strwakeup = ""; }
+        String notif_title = data.getString("title", "");
+        String notif_text = data.getString("text", "");
+        String notif_url = data.getString("url", "");
+        String notif_strsound = data.getString("sound", "");
+        String notif_strongoing = data.getString("ongoing", "");
+        String notif_strwakeup = data.getString("wakeup", "");
         boolean notif_sound = (notif_strsound != null && notif_strsound.equals("true"));
         boolean notif_ongoing = (notif_strongoing != null && notif_strongoing.equals("true"));
         boolean notif_wakeup = (notif_strwakeup != null && notif_strwakeup.equals("true"));
 
-        String ns = Context.NOTIFICATION_SERVICE;
         Intent intent;
         if(notif_url != null && notif_url.length() > 0) {
             intent = new Intent(this, MainActivity.class);

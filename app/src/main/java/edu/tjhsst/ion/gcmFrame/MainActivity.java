@@ -36,8 +36,6 @@ import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -46,7 +44,6 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
@@ -62,18 +59,54 @@ import edu.tjhsst.ion.gcmFrame.com.gcmquickstart.R;
 
 public class MainActivity extends AppCompatActivity {
 
-    static final String ION_HOST = "https://ion.tjhsst.edu/";
-    static final String ION_SETUP_URL = "https://ion.tjhsst.edu/notifications/android/setup";
+    private static final String ION_HOST = "https://ion.tjhsst.edu/";
+    private static final String ION_SETUP_URL = "https://ion.tjhsst.edu/notifications/android/setup";
 
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     private static final String TAG = "MainActivity";
 
     private BroadcastReceiver mRegistrationBroadcastReceiver;
-    private ProgressBar mRegistrationProgressBar;
-    private TextView mInformationTextView;
     private WebView webView;
 
     private boolean isConnected = true;
+
+    public static void notifSetup(String user_token, String gcm_token, Context mContext) {
+
+        Log.i(TAG, user_token + "\n" + gcm_token);
+        Log.i(TAG, "Setting up notification support..");
+        HttpClient httpclient = new DefaultHttpClient();
+        HttpPost httppost = new HttpPost(ION_SETUP_URL);
+
+        try {
+            // Add your data
+            List<NameValuePair> nameValuePairs = new ArrayList<>(2);
+            nameValuePairs.add(new BasicNameValuePair("user_token", user_token));
+            nameValuePairs.add(new BasicNameValuePair("gcm_token", gcm_token));
+            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
+            // Execute HTTP Post Request
+            HttpResponse response = httpclient.execute(httppost);
+            HttpEntity entity = response.getEntity();
+            String resp = "";
+            if (entity != null) {
+                resp = EntityUtils.toString(entity);
+            }
+
+            if (resp.contains("Now registered")) {
+
+                Toast.makeText(mContext, "Your device can now receive notifications from Intranet. To change this, hit the right-side user icon and tap Preferences.", Toast.LENGTH_LONG).show();
+                SharedPreferences sharedPreferences =
+                        PreferenceManager.getDefaultSharedPreferences(mContext);
+                sharedPreferences.edit().putBoolean(QuickstartPreferences.ION_SETUP, true).apply();
+            } else {
+                Toast.makeText(mContext, "An error occurred trying to set up notifications: " + resp, Toast.LENGTH_LONG).show();
+            }
+
+
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,25 +123,18 @@ public class MainActivity extends AppCompatActivity {
         }
         //requestWindowFeature(Window.FEATURE_NO_TITLE);
 
-        //mRegistrationProgressBar = (ProgressBar) findViewById(R.id.registrationProgressBar);
         mRegistrationBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                //mRegistrationProgressBar.setVisibility(ProgressBar.GONE);
                 SharedPreferences sharedPreferences =
                         PreferenceManager.getDefaultSharedPreferences(context);
                 boolean sentToken = sharedPreferences
                         .getBoolean(QuickstartPreferences.SENT_TOKEN_TO_SERVER, false);
                 if (sentToken) {
-                    //mInformationTextView.setText(getString(R.string.gcm_send_message));
-                    //Toast.makeText(getApplicationContext(), getString(R.string.gcm_send_message), 500).show();
                     Log.i(TAG, "Google token sent");
-                    /*Intent i = new Intent(Intent.ACTION_VIEW);
-                    i.setData(Uri.parse("https://ion.tjhsst.edu/"));
-                    startActivity(i);*/
 
                 } else {
-                    Toast.makeText(getApplicationContext(), getString(R.string.token_error_message), 5000).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.token_error_message), Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -116,7 +142,6 @@ public class MainActivity extends AppCompatActivity {
         };
 
 
-        //mInformationTextView = (TextView) findViewById(R.id.informationTextView);
 
         if (checkPlayServices()) {
             // Start IntentService to register this application with GCM.
@@ -152,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
         webView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
         webView.setScrollbarFadingEnabled(false);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            webView.setWebContentsDebuggingEnabled(true);
+            WebView.setWebContentsDebuggingEnabled(true);
         }
         String uaString = webView.getSettings().getUserAgentString();
         uaString += " - IonAndroid: gcmFrame (";
@@ -254,48 +279,6 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
         return true;
-    }
-
-    public static void notifSetup(String user_token, String gcm_token, Context mContext) {
-
-        Log.i(TAG, user_token+"\n"+gcm_token);
-        Log.i(TAG, "Setting up notification support..");
-        HttpClient httpclient = new DefaultHttpClient();
-        HttpPost httppost = new HttpPost(ION_SETUP_URL);
-
-        try {
-            // Add your data
-            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-            nameValuePairs.add(new BasicNameValuePair("user_token", user_token));
-            nameValuePairs.add(new BasicNameValuePair("gcm_token", gcm_token));
-            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-
-            // Execute HTTP Post Request
-            HttpResponse response = httpclient.execute(httppost);
-            HttpEntity entity = response.getEntity();
-            String resp = "";
-            if(entity != null){
-                resp = EntityUtils.toString(entity);
-            }
-
-            if(resp.indexOf("Now registered") != -1) {
-
-                Toast.makeText(mContext, "Your device can now receive notifications from Intranet. To change this, hit the right-side user icon and tap Preferences.", Toast.LENGTH_LONG).show();
-                SharedPreferences sharedPreferences =
-                        PreferenceManager.getDefaultSharedPreferences(mContext);
-                sharedPreferences.edit().putBoolean(QuickstartPreferences.ION_SETUP, true).apply();
-            } else {
-                Toast.makeText(mContext, "An error occurred trying to set up notifications: " + resp, Toast.LENGTH_LONG).show();
-            }
-
-
-
-
-        } catch (ClientProtocolException e) {
-            // TODO Auto-generated catch block
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-        }
     }
 
 }
