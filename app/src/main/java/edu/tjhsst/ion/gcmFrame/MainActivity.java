@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Google Inc. All Rights Reserved.
- *
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
 
         this.setContentView(R.layout.activity_main);
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(getResources().getColor(R.color.navbar_color));
@@ -142,17 +142,16 @@ public class MainActivity extends AppCompatActivity {
         };
 
 
-
         if (checkPlayServices()) {
             // Start IntentService to register this application with GCM.
             Intent intent = new Intent(this, RegistrationIntentService.class);
             startService(intent);
         }
 
-        ConnectivityManager connectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         if (connectivityManager != null) {
             NetworkInfo ni = connectivityManager.getActiveNetworkInfo();
-            if(ni != null) {
+            if (ni != null) {
                 NetworkInfo.State state = ni.getState();
                 if (state == null || state != NetworkInfo.State.CONNECTED) {
                     // record the fact that there is not connection
@@ -181,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
         }
         String uaString = webView.getSettings().getUserAgentString();
         uaString += " - IonAndroid: gcmFrame (";
-        if(sentToken) {
+        if (sentToken) {
             uaString += "appRegistered:True";
         } else {
             uaString += "appRegistered:False";
@@ -206,11 +205,11 @@ public class MainActivity extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                Log.d(TAG, "Loading "+url);
-                if(!isConnected) {
+                Log.d(TAG, "Loading " + url);
+                if (!isConnected) {
                     view.loadData(offlineHTML, "text/html", "utf-8");
                     return true;
-                } else if(url.contains(ION_HOST)) {
+                } else if (url.contains(ION_HOST)) {
                     // keep in webview
                     webView.loadUrl(url);
                     return true;
@@ -223,16 +222,16 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onReceivedError (WebView view, int errorCode,
-                                         String description, String failingUrl) {
+            public void onReceivedError(WebView view, int errorCode,
+                                        String description, String failingUrl) {
                 //if (errorCode == ERROR_TIMEOUT) {
-                    view.stopLoading();  // may not be needed
-                    String html = timeoutHTML;
-                    html = html.replace("[url]", failingUrl);
-                    html = html.replace("[url]", failingUrl);
-                    html = html.replace("[url]", failingUrl);
-                    html = html.replace("[desc]", description);
-                    view.loadData(html, "text/html", "utf-8");
+                view.stopLoading();  // may not be needed
+                String html = timeoutHTML;
+                html = html.replace("[url]", failingUrl);
+                html = html.replace("[url]", failingUrl);
+                html = html.replace("[url]", failingUrl);
+                html = html.replace("[desc]", description);
+                view.loadData(html, "text/html", "utf-8");
                 //}
             }
         });

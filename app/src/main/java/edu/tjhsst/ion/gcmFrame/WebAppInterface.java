@@ -15,7 +15,9 @@ import edu.tjhsst.ion.gcmFrame.com.gcmquickstart.R;
 class WebAppInterface {
     private final Context mContext;
 
-    /** Instantiate the interface and set the context */
+    /**
+     * Instantiate the interface and set the context
+     */
     WebAppInterface(Context c) {
         mContext = c;
     }

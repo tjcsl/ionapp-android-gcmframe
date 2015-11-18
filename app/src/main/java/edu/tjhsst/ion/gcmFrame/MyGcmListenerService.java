@@ -1,12 +1,12 @@
 /**
  * Copyright 2015 Google Inc. All Rights Reserved.
- *
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -80,16 +80,17 @@ public class MyGcmListenerService extends GcmListenerService {
         Vibrator vib = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
 
         int vibrate = Integer.parseInt(data.getString("vibrate", "0"));
-        if(vibrate > 0) {
+        if (vibrate > 0) {
 
             vib.vibrate(vibrate);
         }
         String[] vibratepattern = data.getString("vibrate", "").split(",");
-        long[] vibpattern = new long[10];int i=0;
-        for(String p:vibratepattern) {
+        long[] vibpattern = new long[10];
+        int i = 0;
+        for (String p : vibratepattern) {
             vibpattern[i++] = Long.parseLong(p);
         }
-        if(vibratepattern.length > 0) {
+        if (vibratepattern.length > 0) {
             vib.vibrate(vibpattern, -1);
         }
         String notif_title = data.getString("title", "");
@@ -103,7 +104,7 @@ public class MyGcmListenerService extends GcmListenerService {
         boolean notif_wakeup = (notif_strwakeup != null && notif_strwakeup.equals("true"));
 
         Intent intent;
-        if(notif_url != null && notif_url.length() > 0) {
+        if (notif_url != null && notif_url.length() > 0) {
             intent = new Intent(this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         } else {
@@ -112,14 +113,14 @@ public class MyGcmListenerService extends GcmListenerService {
         }
         PendingIntent pIntent = PendingIntent.getActivity(this, 0, intent, 0);
         PowerManager.WakeLock wl = null;
-        if(notif_wakeup) {
+        if (notif_wakeup) {
             Log.d("showNotification", "Wakeup enabled");
             PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
             wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "My Tag");
             wl.acquire(500);
         }
         // NotificationCompat supports API level 9
-        NotificationCompat.Builder n  = new NotificationCompat.Builder(this)
+        NotificationCompat.Builder n = new NotificationCompat.Builder(this)
                 .setContentTitle(notif_title)
                 .setContentText(notif_text)
                 .setSmallIcon(R.drawable.ic_stat_ic_notification)
@@ -127,8 +128,8 @@ public class MyGcmListenerService extends GcmListenerService {
                 .setContentIntent(pIntent)
                 .setAutoCancel(true)
                 .setOngoing(notif_ongoing)
-                .setTicker(notif_title+": "+notif_text);
-        if(notif_sound) {
+                .setTicker(notif_title + ": " + notif_text);
+        if (notif_sound) {
             n.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
         }
 
@@ -137,7 +138,7 @@ public class MyGcmListenerService extends GcmListenerService {
         Notification notif = n.build();
         notificationManager.notify(0, notif);
 
-        if(notif_wakeup) {
+        if (notif_wakeup) {
             wl.release();
         }
 
