@@ -33,7 +33,6 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Window;
 import android.view.WindowManager;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
@@ -41,19 +40,11 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
-
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import edu.tjhsst.ion.gcmFrame.com.gcmquickstart.R;
 
@@ -74,24 +65,18 @@ public class MainActivity extends AppCompatActivity {
 
         Log.i(TAG, user_token + "\n" + gcm_token);
         Log.i(TAG, "Setting up notification support..");
-        HttpClient httpclient = new DefaultHttpClient();
-        HttpPost httppost = new HttpPost(ION_SETUP_URL);
-
         try {
-            // Add your data
-            List<NameValuePair> nameValuePairs = new ArrayList<>(2);
-            nameValuePairs.add(new BasicNameValuePair("user_token", user_token));
-            nameValuePairs.add(new BasicNameValuePair("gcm_token", gcm_token));
-            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-
-            // Execute HTTP Post Request
-            HttpResponse response = httpclient.execute(httppost);
-            HttpEntity entity = response.getEntity();
-            String resp = "";
-            if (entity != null) {
-                resp = EntityUtils.toString(entity);
-            }
-
+            URL url = new URL(ION_SETUP_URL);
+            Uri.Builder builder = new Uri.Builder()
+                    .appendQueryParameter("user_token", user_token)
+                    .appendQueryParameter("gcm_token", gcm_token);
+            byte[] query = builder.build().getEncodedQuery().getBytes();
+            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setDoOutput(true);
+            urlConnection.setFixedLengthStreamingMode(query.length);
+            urlConnection.getOutputStream().write(query);
+            BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+            String resp = in.readLine();
             if (resp.contains("Now registered")) {
 
                 Toast.makeText(mContext, "Your device can now receive notifications from Intranet. To change this, hit the right-side user icon and tap Preferences.", Toast.LENGTH_LONG).show();
@@ -101,10 +86,9 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(mContext, "An error occurred trying to set up notifications: " + resp, Toast.LENGTH_LONG).show();
             }
-
-
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            Log.e(TAG, "Setting up notifications failed", e);
+
         }
     }
 
@@ -171,7 +155,6 @@ public class MainActivity extends AppCompatActivity {
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setLoadWithOverviewMode(true);
 
-        webView.getSettings().setTextSize(WebSettings.TextSize.NORMAL);
         webView.getSettings().setUseWideViewPort(true);
         webView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
         webView.setScrollbarFadingEnabled(false);
@@ -186,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
             uaString += "appRegistered:False";
         }
         uaString += " osVersion:" + System.getProperty("os.version");
-        uaString += " apiLevel:" + android.os.Build.VERSION.SDK;
+        uaString += " apiLevel:" + android.os.Build.VERSION.SDK_INT;
         uaString += " Device:" + android.os.Build.DEVICE;
         uaString += " Model:" + android.os.Build.MODEL;
         uaString += " Product:" + android.os.Build.PRODUCT;

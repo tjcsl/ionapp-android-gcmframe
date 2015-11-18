@@ -23,9 +23,7 @@ android {
     }
     productFlavors {
     }
-    // FIXME: don't rely on deprecated library
-    // http://developer.android.com/about/versions/marshmallow/android-6.0-changes.html#behavior-apache-http-client
-    useLibrary 'org.apache.http.legacy'
+
 }
 
 dependencies {
