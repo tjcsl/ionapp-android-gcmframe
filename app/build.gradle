@@ -2,16 +2,15 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 
 android {
-    compileSdkVersion 21
-    buildToolsVersion "21.1.2"
+    compileSdkVersion 23
+    buildToolsVersion '23.0.2'
     defaultConfig {
         applicationId 'edu.tjhsst.ion.gcm'
         minSdkVersion 9
-        targetSdkVersion 21
+        targetSdkVersion 23
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
@@ -24,14 +23,13 @@ android {
     }
     productFlavors {
     }
+    // FIXME: don't rely on deprecated library
+    // http://developer.android.com/about/versions/marshmallow/android-6.0-changes.html#behavior-apache-http-client
+    useLibrary 'org.apache.http.legacy'
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.google.android.gms:play-services-gcm:7.5.+'
-    compile 'com.android.support:appcompat-v7:22.1.1'
-    // Testing dependencies
-    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.1'
-    androidTestCompile 'com.android.support.test:runner:0.2'
-    androidTestCompile 'com.android.support:support-annotations:22.1.1'
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'com.google.android.gms:play-services-gcm:8.3.0'
+    compile 'com.android.support:appcompat-v7:23.1.1'
 }
